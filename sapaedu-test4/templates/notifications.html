@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления - Sapa Edu{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4 d-none d-lg-block">
+            <div class="sidebar p-4">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-gradient-primary rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="fas fa-bell text-white fa-2x"></i>
+                    </div>
+                    <h5 class="mt-3 mb-1">Уведомления</h5>
+                    <small class="text-muted">{{ session.user_name }}</small>
+                </div>
+
+                <div class="nav flex-column">
+                    <a href="{{ url_for('student_dashboard') }}" class="sidebar-item">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Главная
+                    </a>
+                    <a href="{{ url_for('student_dashboard') }}#courses" class="sidebar-item">
+                        <i class="fas fa-book me-2"></i>
+                        Курсы
+                    </a>
+                    <a href="{{ url_for('my_certificates') }}" class="sidebar-item">
+                        <i class="fas fa-certificate me-2"></i>
+                        Сертификаты
+                    </a>
+                    <a href="{{ url_for('notifications') }}" class="sidebar-item active">
+                        <i class="fas fa-bell me-2"></i>
+                        Уведомления
+                    </a>
+                    <hr class="my-3">
+                    <a href="{{ url_for('profile') }}" class="sidebar-item">
+                        <i class="fas fa-user me-2"></i>
+                        Профиль
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="sidebar-item text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Выход
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Mobile Header -->
+            <div class="d-lg-none mb-3">
+                <div class="glass-card p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-bell text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Уведомления</h6>
+                                <small class="text-muted">{{ session.user_name }}</small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <h2 class="mb-2 mb-md-0">
+                        <i class="fas fa-bell me-2"></i>
+                        Мои уведомления
+                    </h2>
+                    {% if notifications %}
+                    <button class="btn btn-outline-primary btn-sm" onclick="markAllAsRead()">
+                        <i class="fas fa-check me-2"></i>
+                        <span class="d-none d-md-inline">Отметить все как прочитанные</span>
+                        <span class="d-md-none">Все прочитано</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if notifications %}
+            <div class="glass-card">
+                <div class="card-body p-0">
+                    {% for notification in notifications %}
+                    <div class="notification-item {% if not notification.read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                        <div class="d-flex align-items-start p-4 border-bottom">
+                            <div class="notification-icon me-3">
+                                {% if notification.type == 'certificate_issued' %}
+                                    <i class="fas fa-certificate text-success"></i>
+                                {% elif notification.type == 'course_published' %}
+                                    <i class="fas fa-book text-primary"></i>
+                                {% elif notification.type == 'phishing_failed' %}
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-info"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0 {% if not notification.read %}fw-bold{% endif %}">{{ notification.title }}</h6>
+                                    <div class="d-flex align-items-center">
+                                        <small class="text-muted me-2">{{ notification.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                                        {% if not notification.read %}
+                                        <span class="badge bg-primary">Новое</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <p class="mb-2 {% if not notification.read %}fw-bold{% else %}text-muted{% endif %}">{{ notification.message }}</p>
+                                {% if notification.type == 'certificate_issued' %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('my_certificates') }}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-certificate me-1"></i>
+                                        Посмотреть сертификат
+                                    </a>
+                                </div>
+                                {% elif notification.type == 'course_published' %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('student_dashboard') }}#courses" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-book me-1"></i>
+                                        Перейти к курсам
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% if not notification.read %}
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary mark-read-btn" onclick="markAsRead({{ notification.id }})">
+                                        <i class="fas fa-check me-1"></i>
+                                        Отметить как прочитанное
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="glass-card">
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3 opacity-50"></i>
+                    <h4 class="text-muted">У вас нет уведомлений</h4>
+                    <p class="text-muted">Здесь будут появляться уведомления о новых курсах, сертификатах и других важных событиях.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.notification-item.unread {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.notification-item:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 50%;
+}
+
+.sidebar .sidebar-item.active {
+    background: var(--gradient-primary);
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Mobile optimizations */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 0.5rem;
+        }
+
+        .glass-card {
+            padding: 1rem !important;
+            margin-bottom: 1rem;
+        }
+
+        .notification-item {
+            padding: 1rem !important;
+        }
+
+        .notification-icon {
+            width: 35px;
+            height: 35px;
+            margin-right: 0.75rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        h6 {
+            font-size: 1rem;
+        }
+
+        .btn {
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .d-flex.justify-content-between .btn {
+            margin-top: 0.5rem;
+            align-self: flex-end;
+        }
+    }
+
+    /* Fix notifications page functionality */
+    @media (max-width: 991px) {
+        .d-lg-none {
+            display: block !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .notification-item {
+            padding: 0.75rem !important;
+        }
+
+        .notification-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 0.5rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+        }
+
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.5rem;
+        }
+    }
+</style>
+
+<script>
+function markAsRead(notificationId) {
+    fetch('/notifications/mark-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `notification_id=${notificationId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            notification.classList.remove('unread');
+            notification.querySelector('.badge').remove();
+            notification.querySelector('.mark-read-btn').remove();
+
+            // Update sidebar counter
+            updateNotificationCounter();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function markAllAsRead() {
+    fetch('/notifications/mark-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function updateNotificationCounter() {
+    const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    const badge = document.querySelector('.sidebar .badge');
+    if (badge) {
+        if (unreadCount === 0) {
+            badge.remove();
+        } else {
+            badge.textContent = unreadCount;
+        }
+    }
+}
+</script>
+{% endblock %}

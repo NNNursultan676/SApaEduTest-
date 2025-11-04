@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Тест главы - {{ chapter.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-question-circle"></i>
+                        Тест главы: {{ chapter.title }}
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    {% if not chapter.test_questions or chapter.test_questions|length == 0 %}
+                    <div class="alert alert-danger text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h4>Тест недоступен</h4>
+                        <p>Вопросы для этого теста еще не настроены. Пожалуйста, обратитесь к администратору курса.</p>
+                        <a href="#" onclick="returnToCourse(); return false;" class="btn btn-primary mt-3">
+                            <i class="fas fa-arrow-left"></i>
+                            Вернуться к курсу
+                        </a>
+                    </div>
+                    {% else %}
+                    <form method="POST" id="testForm">
+                        {% for question in chapter.test_questions %}
+                        {% if question and question.get('text') and question.get('answers') %}
+                        {% set question_index = loop.index0 %}
+                        <div class="question-block mb-4 p-4 border rounded bg-light">
+                            <h5 class="question-title mb-3">
+                                <span class="badge bg-primary me-2">{{ loop.index }}</span>
+                                Вопрос {{ loop.index }} из {{ chapter.test_questions|length }}
+                                {% if question.get('type') == 'multiple' %}
+                                <span class="badge bg-info ms-2">
+                                    Несколько ответов
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success ms-2">
+                                    Один ответ
+                                </span>
+                                {% endif %}
+                            </h5>
+
+                            <div class="question-text mb-4">
+                                {{ question.text|safe }}
+                                {% if question.get('image') %}
+                                <div class="mt-3">
+                                    <img src="{{ question.image }}" class="img-fluid rounded" style="max-width: 500px; max-height: 300px;" onerror="this.style.display='none'">
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="answers">
+                                {% if question.get('answers') and question.answers is iterable and question.answers is not string %}
+                                {% for answer in question.answers %}
+                                {% if answer %}
+                                {% set answer_index = loop.index0 %}
+                                <div class="form-check mb-2 p-3 border rounded answer-option" onclick="toggleAnswer(this, event)">
+                                    {% if question.get('type') == 'multiple' %}
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="question_{{ question_index }}" 
+                                           value="{{ answer_index }}" 
+                                           id="q{{ question_index }}_a{{ answer_index }}">
+                                    {% else %}
+                                    <input class="form-check-input" type="radio" 
+                                           name="question_{{ question_index }}" 
+                                           value="{{ answer_index }}" 
+                                           id="q{{ question_index }}_a{{ answer_index }}">
+                                    {% endif %}
+                                    <label class="form-check-label w-100 cursor-pointer" for="q{{ question_index }}_a{{ answer_index }}" style="margin-left: 1.5rem;">
+                                        {{ answer|safe }}
+                                    </label>
+                                </div></old_str>
+                                {% endif %}
+                                {% endfor %}
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Ошибка в данных вопроса. Обратитесь к администратору.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i>
+                                Отправить ответы
+                            </button>
+                            <a href="#" onclick="returnToCourse(); return false;" class="btn btn-secondary btn-lg ms-2">
+                                <i class="fas fa-arrow-left"></i>
+                                Вернуться к курсу
+                            </a>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.question-block {
+    background: #f8f9fa;
+}
+
+.question-title {
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+}
+
+.question-text {
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.answer-option {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.answer-option:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff !important;
+    transform: translateX(2px);
+}
+
+.form-check-label {
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    display: block;
+    position: relative;
+}
+
+.form-check-input {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 2;
+}
+
+.form-check-input:checked + .form-check-label {
+    background-color: #e7f3ff;
+    font-weight: 500;
+    border-color: #007bff;
+}
+
+.answer-option:has(.form-check-input:checked) {
+    background-color: #e7f3ff;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}</old_str>
+
+.question-media {
+    text-align: center;
+}
+
+.embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+.embed-responsive-16by9 {
+    padding-bottom: 56.25%;
+}
+
+.embed-responsive-item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const testForm = document.getElementById('testForm');
+    if (!testForm) return;
+
+    // Prevent double submission
+    let isSubmitting = false;
+
+    testForm.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        const questions = document.querySelectorAll('.question-block');
+        let allAnswered = true;
+        let unansweredQuestions = [];
+
+        questions.forEach((question, index) => {
+            const radioInputs = question.querySelectorAll('input[type="radio"]');
+            const checkboxInputs = question.querySelectorAll('input[type="checkbox"]');
+
+            let answered = false;
+
+            if (radioInputs.length > 0) {
+                // Для радио кнопок проверяем, что выбран один ответ
+                answered = Array.from(radioInputs).some(input => input.checked);
+            } else if (checkboxInputs.length > 0) {
+                // Для чекбоксов проверяем, что выбран хотя бы один ответ
+                answered = Array.from(checkboxInputs).some(input => input.checked);
+            }
+
+            if (!answered) {
+                allAnswered = false;
+                unansweredQuestions.push(index + 1);
+                question.style.border = '2px solid #dc3545';
+                question.style.backgroundColor = '#fff5f5';
+            } else {
+                question.style.border = '1px solid #dee2e6';
+                question.style.backgroundColor = '#f8f9fa';
+            }
+        });
+
+        if (!allAnswered) {
+            e.preventDefault();
+            alert(`Пожалуйста, ответьте на все вопросы. Не отвечены вопросы: ${unansweredQuestions.join(', ')}`);
+
+            // Scroll to first unanswered question
+            const firstUnanswered = document.querySelector('.question-block[style*="border: 2px solid #dc3545"]');
+            if (firstUnanswered) {
+                firstUnanswered.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
+        const confirmMessage = 'Вы уверены, что хотите отправить ответы? После отправки изменить их будет нельзя.';
+        if (!confirm(confirmMessage)) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Mark as submitting and show loading state
+        isSubmitting = true;
+        const submitButton = testForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+            submitButton.disabled = true;
+
+            // Restore button if form submission fails
+            setTimeout(() => {
+                if (isSubmitting) {
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                    isSubmitting = false;
+                }
+            }, 30000); // 30 second timeout
+        }
+
+        return true;
+    });
+
+    // Add visual feedback for answer selection
+    const inputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const questionBlock = this.closest('.question-block');
+            if (questionBlock) {
+                questionBlock.style.border = '1px solid #28a745';
+                questionBlock.style.backgroundColor = '#f8f9fa';
+            }
+        });
+    });
+});
+
+// Add CSS for better visual feedback
+const style = document.createElement('style');
+style.textContent = `
+    .question-block {
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .question-block:hover {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .cursor-pointer {
+        cursor: pointer !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Функция для обработки клика по всей области ответа
+function toggleAnswer(answerOption, event) {
+    // Предотвращаем всплытие события и действия по умолчанию
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
+    const input = answerOption.querySelector('input');
+    if (input) {
+        if (input.type === 'radio') {
+            input.checked = true;
+        } else if (input.type === 'checkbox') {
+            input.checked = !input.checked;
+        }
+        
+        // Trigger change event
+        const event = new Event('change', { bubbles: true });
+        input.dispatchEvent(event);
+    }
+}
+
+function returnToCourse() {
+    window.location.href = "{{ url_for('view_course', course_id=chapter.course_id, chapter_id=chapter.id) }}";
+}</old_str>
+</script>
+
+{% endblock %}

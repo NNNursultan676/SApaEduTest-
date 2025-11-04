@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Проверка сертификата{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="glass-card p-4 mb-4">
+                <div class="text-center mb-4">
+                    <div class="bg-gradient-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-search text-white fa-2x"></i>
+                    </div>
+                    <h3 class="mb-2">Проверка сертификата</h3>
+                    {% if prefilled_code %}
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-qrcode me-2"></i>
+                        Код получен из QR-кода. Нажмите "Проверить" для продолжения.
+                    </div>
+                    {% endif %}
+                    <p class="text-muted">{{ "Код автоматически заполнен" if prefilled_code else "Введите код сертификата для проверки его подлинности" }}</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('check_certificate_result') }}" id="certificateCheckForm">
+                    <div class="mb-4">
+                        <label for="certificate_code" class="form-label fw-semibold">
+                            <i class="fas fa-key me-2"></i>Код сертификата
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg text-center" 
+                               id="certificate_code" 
+                               name="certificate_code" 
+                               placeholder="Введите 6 символов" 
+                               maxlength="6" 
+                               required
+                               value="{{ prefilled_code or '' }}"
+                               style="letter-spacing: 0.3em; font-weight: bold; font-size: 1.5rem;"
+                               autocomplete="off"
+                               autocapitalize="characters"
+                               inputmode="text">
+                        <div class="form-text text-center mt-2">
+                            <small>Код находится на сертификате (буквы и цифры)</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary-modern btn-lg" id="checkButton">
+                            <i class="fas fa-search me-2"></i>Проверить сертификат
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Проверка подлинности сертификатов SapaEdu
+                    </small>
+                </div>
+            </div>
+
+            <div class="glass-card p-3">
+                <div class="text-center">
+                    <h6 class="mb-2">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Как найти код?
+                    </h6>
+                    <p class="text-muted small mb-0">
+                        Код сертификата указан в правом нижнем углу документа. 
+                        Это комбинация из 6 букв и цифр.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('certificateCheckForm');
+    const input = document.getElementById('certificate_code');
+    const button = document.getElementById('checkButton');
+
+    // Функция для получения параметров URL
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        const results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    // Проверяем наличие кода в URL и автозаполняем
+    const urlCode = getUrlParameter('code');
+    if (urlCode && urlCode.length === 6) {
+        console.log('Автозаполнение кода из URL:', urlCode);
+        input.value = urlCode.toUpperCase();
+
+        // Добавляем небольшую задержку для лучшего UX
+        setTimeout(() => {
+            // Показываем уведомление
+            showNotification('Код автоматически заполнен из QR-кода', 'info');
+
+            // Автоматически отправляем форму через 1.5 секунды
+            setTimeout(() => {
+                console.log('Автоматическая отправка формы');
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Проверка...';
+                button.disabled = true;
+                form.submit();
+            }, 1500);
+        }, 500);
+    }
+
+    // Обработка ввода в поле
+    input.addEventListener('input', function(e) {
+        // Преобразуем в верхний регистр и ограничиваем 6 символами
+        let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (value.length > 6) {
+            value = value.substring(0, 6);
+        }
+        e.target.value = value;
+
+        // Если введено 6 символов, автоматически отправляем форму
+        if (value.length === 6) {
+            setTimeout(() => {
+                form.submit();
+            }, 300);
+        }
+    });
+
+    // Обработка отправки формы
+    form.addEventListener('submit', function(e) {
+        const code = input.value.trim();
+
+        if (code.length !== 6) {
+            e.preventDefault();
+            showNotification('Код должен содержать ровно 6 символов', 'error');
+            input.focus();
+            return false;
+        }
+
+        // Показываем состояние загрузки
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Проверка...';
+        button.disabled = true;
+
+        // Добавляем класс загрузки к карточке
+        document.querySelector('.glass-card').style.opacity = '0.8';
+    });
+
+    // Функция для показа уведомлений
+    function showNotification(message, type = 'info') {
+        // Удаляем существующие уведомления
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notif => notif.remove());
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Показываем уведомление
+        setTimeout(() => notification.classList.add('show'), 100);
+
+        // Автоматически скрываем через 4 секунды
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
+
+    // Фокус на поле ввода при загрузке страницы
+    setTimeout(() => {
+        if (!urlCode) {
+            input.focus();
+        }
+    }, 100);
+});
+</script>
+
+<style>
+.glass-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.btn-primary-modern {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-color: #f8fff9;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification.success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.notification.error {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.notification.info {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.notification .btn-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.8;
+    padding: 0;
+    margin: 0;
+}
+
+.notification .btn-close:hover {
+    opacity: 1;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .glass-card {
+        padding: 1.5rem !important;
+    }
+
+    #certificate_code {
+        font-size: 1.2rem !important;
+        letter-spacing: 0.2em !important;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        min-height: 48px;
+    }
+
+    .notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .glass-card {
+        padding: 1rem !important;
+    }
+
+    #certificate_code {
+        font-size: 1.1rem !important;
+    }
+}
+</style>
+{% endblock %}

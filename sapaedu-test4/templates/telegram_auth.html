@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Telegram авторизация{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h3 class="mb-4">🔐 Авторизация через Telegram</h3>
+
+                    {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {{ error }}
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-muted">Для получения доступа:</p>
+                        <div class="d-grid gap-2">
+                            <a href="https://t.me/sapasupport" class="btn btn-primary" target="_blank">
+                                <i class="fab fa-telegram"></i> Связаться с поддержкой
+                            </a>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-home"></i> На главную
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Выполняется вход через Telegram...</p>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="small text-muted mt-3">Подождите, идет проверка доступа</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.btn {
+    border-radius: 10px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
+{% endblock %}

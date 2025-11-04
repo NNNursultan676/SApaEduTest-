@@ -1,0 +1,43 @@
+
+{% extends "base.html" %}
+
+{% block title %}Предупреждение о безопасности{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <h3><i class="fas fa-exclamation-triangle"></i> ВНИМАНИЕ!</h3>
+                </div>
+                <div class="card-body text-center">
+                    <h4 class="text-danger mb-4">Вы кликнули на фишинговую ссылку!</h4>
+                    
+                    <div class="alert alert-warning">
+                        <h5>Это была проверка безопасности</h5>
+                        <p>Данное письмо было отправлено в рамках тестирования вашей осведомленности о кибербезопасности.</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Как распознать фишинг:</h5>
+                        <ul class="text-left">
+                            <li>Проверяйте адрес отправителя</li>
+                            <li>Не переходите по подозрительным ссылкам</li>
+                            <li>Не вводите пароли на незнакомых сайтах</li>
+                            <li>Обращайте внимание на орфографические ошибки</li>
+                            <li>При сомнениях обращайтесь к IT-отделу</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary">
+                            Вернуться к курсам
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

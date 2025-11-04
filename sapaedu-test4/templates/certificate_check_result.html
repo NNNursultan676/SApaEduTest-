@@ -1,0 +1,289 @@
+
+{% extends "base.html" %}
+
+{% block title %}Результат проверки сертификата{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center {% if found and not revoked %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
+                    <h3 class="mb-0">
+                        <i class="fas {% if found and not revoked %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i> 
+                        Результат проверки сертификата
+                    </h3>
+                    <p class="mb-0 mt-2">
+                        {% if from_qr %}
+                        <i class="fas fa-qrcode me-1"></i>
+                        {% endif %}
+                        Код: <strong>{{ code }}</strong>
+                        {% if from_qr %}
+                        <small class="d-block mt-1">(получен из QR-кода)</small>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="card-body p-4">
+                    {% if found %}
+                        {% if revoked %}
+                        <div class="alert alert-danger text-center">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Сертификат отозван</h4>
+                            <p class="mb-0">Данный сертификат был отозван и не является действительным.</p>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success text-center">
+                            <h4><i class="fas fa-shield-alt"></i> Сертификат действителен</h4>
+                            <p class="mb-0">Данный сертификат является подлинным и действительным.</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="certificate-info mt-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-user"></i> Информация о владельце
+                                        </h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Имя:</strong></td>
+                                                <td>{{ user.name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Email:</strong></td>
+                                                <td>{{ user.email }}</td>
+                                            </tr>
+                                            {% if user.company %}
+                                            <tr>
+                                                <td><strong>Компания:</strong></td>
+                                                <td>{{ user.company }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="info-card">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-graduation-cap"></i> Информация о курсе
+                                        </h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Курс:</strong></td>
+                                                <td>{{ course.title }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Дата выдачи:</strong></td>
+                                                <td>{{ certificate.issued_at.strftime('%d.%m.%Y') }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Результат:</strong></td>
+                                                <td><span class="badge bg-success">{{ certificate.exam_score }}%</span></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="info-card">
+                                        <h6 class="text-primary">
+                                            <i class="fas fa-info-circle"></i> Детали сертификата
+                                        </h6>
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>ID сертификата:</strong></td>
+                                                <td><code>{{ certificate.certificate_id }}</code></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Код сертификата:</strong></td>
+                                                <td><span class="badge bg-primary fs-6">{{ certificate.certificate_code }}</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Статус:</strong></td>
+                                                <td>
+                                                    {% if certificate.status == 'active' and not revoked %}
+                                                    <span class="badge bg-success">Активен</span>
+                                                    {% else %}
+                                                    <span class="badge bg-danger">Отозван</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if certificate.status == 'active' and not revoked %}
+                        <div class="verification-stamp text-center mt-4">
+                            <div class="stamp">
+                                <div class="stamp-inner">
+                                    <i class="fas fa-certificate fa-2x text-success"></i>
+                                    <div class="stamp-text">
+                                        <strong>ПРОВЕРЕНО</strong><br>
+                                        <small>SapaEdu</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="alert alert-danger text-center">
+                            <h4><i class="fas fa-times-circle"></i> Сертификат не найден</h4>
+                            <p class="mb-0">Сертификат с кодом <strong>{{ code }}</strong> не найден в системе.</p>
+                        </div>
+                        
+                        <div class="error-info mt-4">
+                            <h6 class="text-danger">Возможные причины:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-exclamation-circle text-warning me-2"></i> Неверно введен код сертификата</li>
+                                <li><i class="fas fa-exclamation-circle text-warning me-2"></i> Сертификат был отозван</li>
+                                <li><i class="fas fa-exclamation-circle text-warning me-2"></i> Сертификат не существует в системе</li>
+                                <li><i class="fas fa-exclamation-circle text-warning me-2"></i> Ошибка ввода (проверьте правильность кода)</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('check_certificate') }}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Проверить другой сертификат
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> На главную
+                    </a>
+                    {% if found and not revoked %}
+                    <button class="btn btn-info" onclick="window.print()">
+                        <i class="fas fa-print"></i> Печать результата
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>
+                    Проверено: {{ current_time or "сейчас" }} | 
+                    <i class="fas fa-shield-alt me-1"></i>
+                    SapaEdu - Система проверки сертификатов
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #007bff;
+}
+
+.info-card h6 {
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.table td {
+    border: none;
+    padding: 8px 12px;
+    vertical-align: middle;
+}
+
+.table tr:nth-child(even) {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.verification-stamp {
+    margin: 30px 0;
+}
+
+.stamp {
+    display: inline-block;
+    border: 3px solid #28a745;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    position: relative;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.stamp-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.stamp-text {
+    margin-top: 5px;
+    color: #28a745;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.error-info {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.error-info h6 {
+    color: #c53030;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.error-info ul li {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+code {
+    background: #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+@media print {
+    .btn, .card-footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    body {
+        background: white !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add current time if not set
+    const timeElements = document.querySelectorAll('[data-time="current"]');
+    const now = new Date();
+    const timeString = now.toLocaleDateString('ru-RU') + ' ' + now.toLocaleTimeString('ru-RU');
+    
+    timeElements.forEach(el => {
+        if (!el.textContent.trim()) {
+            el.textContent = timeString;
+        }
+    });
+});
+</script>
+{% endblock %}
