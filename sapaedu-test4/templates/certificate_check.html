@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Проверка сертификата{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-certificate fa-3x mb-3"></i>
+                    <h2 class="mb-0">Проверка сертификата</h2>
+                    <p class="mb-0 mt-2">Введите код для проверки подлинности</p>
+                </div>
+                <div class="card-body p-5">
+                    {% if from_qr %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-qrcode me-2"></i>
+                        Сертификат загружен из QR-кода
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('check_certificate') }}" id="certificateCheckForm">
+                        <div class="mb-4">
+                            <label for="certificate_code" class="form-label fw-bold">
+                                <i class="fas fa-key me-2"></i>Код сертификата (6 символов)
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-lg text-center" 
+                                id="certificate_code" 
+                                name="certificate_code" 
+                                placeholder="Например: ABC123"
+                                value="{{ prefilled_code }}"
+                                maxlength="6"
+                                pattern="[A-Za-z0-9]{6}"
+                                required
+                                style="letter-spacing: 0.3em; font-weight: bold; font-family: 'Courier New', monospace;"
+                            >
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Код указан на сертификате (6 символов)
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-lg text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-search me-2"></i>Проверить сертификат
+                            </button>
+                            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Вернуться
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <h5 class="text-muted mb-3">
+                            <i class="fas fa-question-circle me-2"></i>Как проверить?
+                        </h5>
+                        <ol class="text-muted">
+                            <li>Найдите код на сертификате (6 символов)</li>
+                            <li>Введите код в поле выше</li>
+                            <li>Нажмите "Проверить сертификат"</li>
+                            <li>Получите информацию о подлинности</li>
+                        </ol>
+
+                        <div class="alert alert-light border mt-3">
+                            <i class="fas fa-shield-alt text-success me-2"></i>
+                            <strong>Безопасность:</strong> Все сертификаты проверяются в реальном времени через защищенное соединение
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 text-muted">
+                <p class="mb-0">
+                    <i class="fas fa-lock me-2"></i>
+                    Защищено SapaEdu | 
+                    <i class="fas fa-clock me-2"></i>
+                    Мгновенная проверка
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+#certificate_code {
+    text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('certificateCheckForm');
+    const input = document.getElementById('certificate_code');
+
+    // Auto-uppercase input
+    input.addEventListener('input', function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const code = input.value.trim();
+
+        if (code.length !== 6) {
+            e.preventDefault();
+            alert('Код должен содержать ровно 6 символов');
+            input.focus();
+            return false;
+        }
+
+        if (!/^[A-Z0-9]{6}$/.test(code)) {
+            e.preventDefault();
+            alert('Код может содержать только буквы и цифры');
+            input.focus();
+            return false;
+        }
+    });
+
+    // Add loading state on submit
+    form.addEventListener('submit', function() {
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Проверка...';
+    });
+});
+</script>
+{% endblock %}

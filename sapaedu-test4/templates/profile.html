@@ -1,0 +1,1700 @@
+{% extends "base.html" %}
+{% block title %}Профиль - SapaEdu{% endblock %}
+
+{% block content %}
+<!-- Desktop Version -->
+<div class="desktop-profile d-none d-lg-block">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+
+                <!-- Profile Header -->
+                <div class="profile-header-card mb-4">
+                    <div class="header-background">
+                        <canvas id="digital-rain" class="digital-rain-canvas"></canvas>
+                    </div>
+                    <div class="header-content">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="profile-avatar-large">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="profile-main-info">
+                                    <h1 class="profile-name">{{ user.name }}</h1>
+                                    <p class="profile-email">{{ user.email }}</p>
+                                    <div class="profile-badges">
+                                        {% if user.is_admin %}
+                                            <span class="badge-premium">
+                                                <i class="fas fa-crown me-2"></i>Администратор
+                                            </span>
+                                        {% else %}
+                                            <span class="badge-student">
+                                                <i class="fas fa-graduation-cap me-2"></i>Студент
+                                            </span>
+                                        {% endif %}
+
+                                        {% if user.telegram_id %}
+                                            <span class="badge-telegram">
+                                                <i class="fab fa-telegram-plane me-2"></i>Telegram подключен
+                                            </span>
+                                        {% endif %}
+
+                                        {% if user.company %}
+                                            <span class="badge-company">
+                                                <i class="fas fa-building me-2"></i>{{ user.company }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="profile-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-number">{{ certificates|length }}</div>
+                                        <div class="stat-label">Сертификатов</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">{{ course_progress|length }}</div>
+                                        <div class="stat-label">Курсов в процессе</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Left Column - Edit Form -->
+                    <div class="col-lg-8">
+                        <div class="form-card">
+                            <div class="card-header-modern">
+                                <h4 class="card-title">
+                                    <i class="fas fa-edit text-primary me-3"></i>Редактировать профиль
+                                </h4>
+                            </div>
+                            <div class="card-body-modern">
+                                <form method="POST" novalidate>
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <div class="form-group-modern">
+                                                <label for="name" class="form-label-modern">
+                                                    <i class="fas fa-user me-2"></i>Полное имя
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    class="form-control-modern" 
+                                                    id="name" 
+                                                    name="name" 
+                                                    value="{{ user.name }}" 
+                                                    required
+                                                    autocomplete="name"
+                                                >
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group-modern">
+                                                <label for="email" class="form-label-modern">
+                                                    <i class="fas fa-envelope me-2"></i>Email адрес
+                                                </label>
+                                                <input 
+                                                    type="email" 
+                                                    class="form-control-modern email-input" 
+                                                    id="email" 
+                                                    name="email" 
+                                                    value="{{ user.email }}" 
+                                                    required
+                                                    autocomplete="email"
+                                                    style="word-break: break-all; font-size: 0.95rem !important; line-height: 1.3; max-width: 100%; overflow-wrap: break-word;"
+                                                >
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group-modern">
+                                                <label for="company" class="form-label-modern">
+                                                    <i class="fas fa-building me-2"></i>Компания
+                                                </label>
+                                                <select 
+                                                    class="form-control-modern" 
+                                                    id="company" 
+                                                    name="company"
+                                                >
+                                                    <option value="">Выберите компанию</option>
+                                                    <option value="Sapa Technologies" {{ 'selected' if user.company == 'Sapa Technologies' else '' }}>Sapa Technologies</option>
+                                                    <option value="Neo Factoring" {{ 'selected' if user.company == 'Neo Factoring' else '' }}>Neo Factoring</option>
+                                                    <option value="Sapa Digital Finance" {{ 'selected' if user.company == 'Sapa Digital Finance' else '' }}>Sapa Digital Finance</option>
+                                                    <option value="AlgaPay" {{ 'selected' if user.company == 'AlgaPay' else '' }}>AlgaPay</option>
+                                                    <option value="AI Parking" {{ 'selected' if user.company == 'AI Parking' else '' }}>AI Parking</option>
+                                                    <option value="Sapa Digital Communications" {{ 'selected' if user.company == 'Sapa Digital Communications' else '' }}>Sapa Digital Communications</option>
+                                                    <option value="Sapa Solutions" {{ 'selected' if user.company == 'Sapa Solutions' else '' }}>Sapa Solutions</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">
+                                                    <i class="fab fa-telegram-plane me-2"></i>Telegram ID
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    class="form-control-modern readonly" 
+                                                    value="{{ user.telegram_id if user.telegram_id else 'Не подключен' }}" 
+                                                    readonly
+                                                >
+                                                <div class="form-help">Telegram ID привязывается автоматически</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">
+                                                    <i class="fas fa-calendar me-2"></i>Дата регистрации
+                                                </label>
+                                                <input 
+                                                    type="text" 
+                                                    class="form-control-modern readonly" 
+                                                    value="{{ user.registered_at.strftime('%d.%m.%Y в %H:%M') if user.registered_at else 'Неизвестно' }}" 
+                                                    readonly
+                                                >
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn-primary-modern">
+                                            <i class="fas fa-save me-2"></i>Сохранить изменения
+                                        </button>
+                                        <a href="{{ url_for('index') }}" class="btn-secondary-modern">
+                                            <i class="fas fa-arrow-left me-2"></i>К курсам
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Additional Info -->
+                    <div class="col-lg-4">
+                        <!-- Account Info -->
+                        <div class="info-card mb-4">
+                            <div class="card-header-modern">
+                                <h5 class="card-title">
+                                    <i class="fas fa-info-circle text-info me-2"></i>Информация об аккаунте
+                                </h5>
+                            </div>
+                            <div class="card-body-modern">
+                                <div class="info-list">
+                                    <div class="info-item">
+                                        <span class="info-label">Статус:</span>
+                                        <span class="info-value">
+                                            {% if user.is_admin %}
+                                                <span class="status-admin">Администратор</span>
+                                            {% else %}
+                                                <span class="status-user">Активный пользователь</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Компания:</span>
+                                        <span class="info-value">{{ user.company or 'Не указана' }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Telegram:</span>
+                                        <span class="info-value">
+                                            {% if user.telegram_id %}
+                                                <span class="status-connected">Подключен</span>
+                                            {% else %}
+                                                <span class="status-disconnected">Не подключен</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="stats-card">
+                            <div class="card-header-modern">
+                                <h5 class="card-title">
+                                    <i class="fas fa-chart-bar text-success me-2"></i>Статистика
+                                </h5>
+                            </div>
+                            <div class="card-body-modern">
+                                <div class="quick-stats">
+                                    <div class="quick-stat">
+                                        <div class="stat-icon certificates">
+                                            <i class="fas fa-certificate"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-number">{{ certificates|length }}</div>
+                                            <div class="stat-label">Сертификатов</div>
+                                        </div>
+                                    </div>
+                                    <div class="quick-stat">
+                                        <div class="stat-icon progress">
+                                            <i class="fas fa-tasks"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-number">{{ course_progress|length }}</div>
+                                            <div class="stat-label">Курсов в изучении</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificates Section -->
+                {% if certificates %}
+                <div class="section-card mt-4">
+                    <div class="card-header-modern">
+                        <h5 class="card-title">
+                            <i class="fas fa-certificate text-warning me-2"></i>Мои сертификаты ({{ certificates|length }})
+                        </h5>
+                        <a href="{{ url_for('my_certificates') }}" class="btn-link-modern">
+                            Смотреть все <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    <div class="card-body-modern">
+                        <div class="certificates-grid">
+                            {% for cert in certificates[:6] %}
+                            <div class="certificate-item">
+                                <div class="cert-header">
+                                    <div class="cert-icon">
+                                        <i class="fas fa-medal text-warning"></i>
+                                    </div>
+                                    <div class="cert-date">{{ cert.issued_at.strftime('%d.%m.%Y') }}</div>
+                                </div>
+                                <h6 class="cert-title">{{ cert.course.title if cert.course else 'Неизвестный курс' }}</h6>
+                                <div class="cert-code">№ {{ cert.certificate_code if cert.certificate_code else cert.certificate_id[:8] }}</div>
+                                <div class="cert-actions">
+                                    <a href="{{ url_for('view_certificate', certificate_id=cert.certificate_id) }}" 
+                                       class="btn-cert-view">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('download_certificate_image', certificate_id=cert.certificate_id) }}" 
+                                       class="btn-cert-download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Course Progress Section -->
+                {% if course_progress %}
+                <div class="section-card mt-4">
+                    <div class="card-header-modern">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line text-success me-2"></i>Прогресс по курсам
+                        </h5>
+                    </div>
+                    <div class="card-body-modern">
+                        <div class="progress-grid">
+                            {% for progress in course_progress %}
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <h6 class="progress-title">{{ progress.course.title if progress.course else 'Курс #' + progress.course_id|string }}</h6>
+                                    <span class="progress-percent">{{ "%.0f"|format(progress.progress_percent) }}%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar-modern" style="width: {{ progress.progress_percent }}%"></div>
+                                </div>
+                                <div class="progress-status">
+                                    {% if progress.completed %}
+                                        <span class="status-completed">
+                                            <i class="fas fa-check-circle me-1"></i>Завершен
+                                        </span>
+                                    {% else %}
+                                        <span class="status-in-progress">
+                                            <i class="fas fa-clock me-1"></i>В процессе
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Version -->
+<div class="mobile-profile d-block d-lg-none">
+    <div class="mobile-header">
+        <div class="header-top">
+            <a href="{{ url_for('index') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="page-title">Профиль</h1>
+            <div class="header-actions">
+                {% if user.is_admin %}
+                    <span class="admin-badge">
+                        <i class="fas fa-crown"></i>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-summary">
+            <div class="avatar-section">
+                <div class="mobile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+            <div class="user-details">
+                <h2 class="user-name">{{ user.name }}</h2>
+                <p class="user-email">{{ user.email }}</p>
+                <div class="user-badges">
+                    {% if user.telegram_id %}
+                        <span class="badge-telegram-mobile">
+                            <i class="fab fa-telegram-plane"></i>
+                        </span>
+                    {% endif %}
+                    {% if user.company %}
+                        <span class="badge-company-mobile">{{ user.company }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mobile-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ certificates|length }}</div>
+                <div class="stat-label">Сертификатов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ course_progress|length }}</div>
+                <div class="stat-label">Курсов</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-content">
+        <!-- Edit Form -->
+        <div class="mobile-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-edit me-2"></i>Редактировать
+                </h3>
+            </div>
+            <div class="card-content">
+                <form method="POST" novalidate>
+                    <div class="form-group">
+                        <label for="name_mobile" class="form-label">
+                            <i class="fas fa-user me-2"></i>Полное имя
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="name_mobile" 
+                            name="name" 
+                            value="{{ user.name }}" 
+                            required
+                            autocomplete="name"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_mobile" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>Email адрес
+                        </label>
+                        <input 
+                            type="email" 
+                            class="form-control email-input-mobile" 
+                            id="email_mobile" 
+                            name="email" 
+                            value="{{ user.email }}" 
+                            required
+                            autocomplete="email"
+                            style="word-break: break-all; font-size: 0.8rem !important; line-height: 1.2; max-width: 100%; overflow-wrap: break-word;"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_mobile" class="form-label">
+                            <i class="fas fa-building me-2"></i>Компания
+                        </label>
+                        <select 
+                            class="form-control" 
+                            id="company_mobile" 
+                            name="company"
+                        >
+                            <option value="">Выберите компанию</option>
+                            <option value="Sapa Technologies" {{ 'selected' if user.company == 'Sapa Technologies' else '' }}>Sapa Technologies</option>
+                            <option value="Neo Factoring" {{ 'selected' if user.company == 'Neo Factoring' else '' }}>Neo Factoring</option>
+                            <option value="Sapa Digital Finance" {{ 'selected' if user.company == 'Sapa Digital Finance' else '' }}>Sapa Digital Finance</option>
+                            <option value="AlgaPay" {{ 'selected' if user.company == 'AlgaPay' else '' }}>AlgaPay</option>
+                            <option value="AI Parking" {{ 'selected' if user.company == 'AI Parking' else '' }}>AI Parking</option>
+                            <option value="Sapa Digital Communications" {{ 'selected' if user.company == 'Sapa Digital Communications' else '' }}>Sapa Digital Communications</option>
+                            <option value="Sapa Solutions" {{ 'selected' if user.company == 'Sapa Solutions' else '' }}>Sapa Solutions</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fab fa-telegram-plane me-2"></i>Telegram ID
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control readonly" 
+                            value="{{ user.telegram_id if user.telegram_id else 'Не подключен' }}" 
+                            readonly
+                        >
+                        <small class="form-text">Telegram ID привязывается автоматически</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-calendar me-2"></i>Дата регистрации
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control readonly" 
+                            value="{{ user.registered_at.strftime('%d.%m.%Y в %H:%M') if user.registered_at else 'Неизвестно' }}" 
+                            readonly
+                        >
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-save me-2"></i>Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="mobile-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Информация
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="info-list">
+                    <div class="info-row">
+                        <span class="info-label">Статус</span>
+                        <span class="info-value">
+                            {% if user.is_admin %}
+                                <span class="status-admin">Администратор</span>
+                            {% else %}
+                                <span class="status-user">Пользователь</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Компания</span>
+                        <span class="info-value">{{ user.company or 'Не указана' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Telegram</span>
+                        <span class="info-value">
+                            {% if user.telegram_id %}
+                                <span class="status-connected">Подключен</span>
+                            {% else %}
+                                <span class="status-disconnected">Не подключен</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Certificates -->
+        {% if certificates %}
+        <div class="mobile-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-certificate me-2"></i>Сертификаты
+                </h3>
+                <a href="{{ url_for('my_certificates') }}" class="view-all-link">
+                    Все <i class="fas fa-chevron-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="certificates-list">
+                    {% for cert in certificates[:3] %}
+                    <div class="cert-item">
+                        <div class="cert-icon">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <div class="cert-info">
+                            <h6 class="cert-title">{{ cert.course.title if cert.course else 'Неизвестный курс' }}</h6>
+                            <p class="cert-meta">{{ cert.issued_at.strftime('%d.%m.%Y') }} • № {{ cert.certificate_code if cert.certificate_code else cert.certificate_id[:8] }}</p>
+                        </div>
+                        <div class="cert-actions">
+                            <a href="{{ url_for('view_certificate', certificate_id=cert.certificate_id) }}" class="cert-btn">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Course Progress -->
+        {% if course_progress %}
+        <div class="mobile-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-line me-2"></i>Прогресс
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="progress-list">
+                    {% for progress in course_progress %}
+                    <div class="progress-item-mobile">
+                        <div class="progress-header-mobile">
+                            <h6 class="progress-course">{{ progress.course.title if progress.course else 'Курс #' + progress.course_id|string }}</h6>
+                            <span class="progress-percent-mobile">{{ "%.0f"|format(progress.progress_percent) }}%</span>
+                        </div>
+                        <div class="progress-bar-mobile">
+                            <div class="progress-fill" style="width: {{ progress.progress_percent }}%"></div>
+                        </div>
+                        <div class="progress-status-mobile">
+                            {% if progress.completed %}
+                                <span class="status-completed">
+                                    <i class="fas fa-check-circle me-1"></i>Завершен
+                                </span>
+                            {% else %}
+                                <span class="status-in-progress">
+                                    <i class="fas fa-clock me-1"></i>В процессе
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Desktop Styles */
+.desktop-profile {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding-top: 2rem;
+}
+
+.profile-header-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.header-background {
+    height: 220px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 30%, #2563eb 70%, #3b82f6 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.header-background::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(255,255,255,0.05) 25%, 
+        transparent 25%, 
+        transparent 75%, 
+        rgba(255,255,255,0.05) 75%,
+        rgba(255,255,255,0.05)), 
+        linear-gradient(45deg, 
+        rgba(255,255,255,0.05) 25%, 
+        transparent 25%, 
+        transparent 75%, 
+        rgba(255,255,255,0.05) 75%,
+        rgba(255,255,255,0.05));
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    animation: gridMove 20s linear infinite;
+    z-index: 1;
+}
+
+.digital-rain-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes gridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(20px, 20px); }
+}
+
+.header-content {
+    padding: 1.5rem 2rem 2rem 2rem;
+    margin-top: -120px;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: #3b82f6;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border: 5px solid white;
+}
+
+.profile-main-info {
+    color: white;
+    margin-left: 2rem;
+    margin-top: -1.5rem;
+}
+
+.profile-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: -0.025em;
+}
+
+.profile-email {
+    font-size: 0.95rem !important;
+    word-break: break-all;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    line-height: 1.3;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    margin: 0 0 0.75rem 0;
+    opacity: 0.95;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.badge-premium, .badge-student, .badge-telegram, .badge-company {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.badge-premium {
+    background: rgba(255, 193, 7, 0.9);
+    color: white;
+}
+
+.badge-student {
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+}
+
+.badge-telegram {
+    background: rgba(0, 136, 204, 0.9);
+    color: white;
+}
+
+.badge-company {
+    background: rgba(108, 117, 125, 0.9);
+    color: white;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 2rem;
+    color: white;
+    margin-top: -1rem;
+}
+
+.stat-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 100px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+.form-card, .info-card, .stats-card, .section-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    overflow: hidden;
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    backdrop-filter: blur(20px);
+}
+
+.card-header-modern {
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: between;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    flex: 1;
+}
+
+.card-body-modern {
+    padding: 2rem;
+}
+
+.form-group-modern {
+    margin-bottom: 1.5rem;
+}
+
+.form-label-modern {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control-modern {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control-modern:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-control-modern.readonly {
+    background: #f8fafc;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-primary-modern, .btn-secondary-modern {
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-primary-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    border: none;
+}
+
+.btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    color: white;
+    background: linear-gradient(135deg, #5a6fd8 0%, #6b4397 100%);
+}
+
+.btn-secondary-modern {
+    background: #f1f5f9;
+    color: #475569;
+    border: 2px solid #e2e8f0;
+}
+
+.btn-secondary-modern:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+    color: #475569;
+    text-decoration: none;
+}
+
+.btn-link-modern {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.btn-link-modern:hover {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    gap: 1rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #374151;
+    flex-shrink: 0;
+    min-width: fit-content;
+}
+
+.info-value {
+    word-break: break-all;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.85rem !important;
+    line-height: 1.4;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    white-space: normal;
+    font-weight: 500;
+    color: #6b7280;
+    text-align: right;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.status-admin {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.status-user {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.status-connected {
+    color: #0891b2;
+    font-weight: 600;
+}
+
+.status-disconnected {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.quick-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-icon.certificates {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.stat-icon.progress {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.certificates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.certificate-item {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.certificate-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.cert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.cert-icon {
+    font-size: 1.5rem;
+}
+
+.cert-date {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.cert-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.cert-code {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+    font-family: monospace;
+}
+
+.cert-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-cert-view, .btn-cert-download {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-cert-view {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-cert-download {
+    background: #10b981;
+    color: white;
+}
+
+.btn-cert-view:hover, .btn-cert-download:hover {
+    transform: scale(1.1);
+    color: white;
+}
+
+.progress-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.progress-item {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.progress-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    flex: 1;
+}
+
+.progress-percent {
+    font-weight: 700;
+    color: #3b82f6;
+    font-size: 1.1rem;
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 50px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-bar-modern {
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+    border-radius: 50px;
+    transition: width 0.3s ease;
+}
+
+.progress-status {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.status-completed {
+    color: #16a34a;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-in-progress {
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Mobile Styles */
+.mobile-profile {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.mobile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1rem 2rem 1rem;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.back-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+}
+
+.page-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.admin-badge {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 193, 7, 0.9);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.profile-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mobile-avatar {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.user-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.user-email {
+    font-size: 0.8rem !important;
+    word-break: break-all;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    opacity: 0.9;
+    margin: 0 0 0.5rem 0;
+}
+
+.user-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.badge-telegram-mobile {
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 136, 204, 0.9);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.badge-company-mobile {
+    padding: 0.25rem 0.5rem;
+    background: rgba(108, 117, 125, 0.9);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.mobile-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.stat-card .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.mobile-content {
+    padding: 0 1rem 2rem 1rem;
+}
+
+.mobile-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.mobile-card .card-header {
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobile-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.view-all-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control.readonly {
+    background: #f8fafc;
+    color: #6b7280;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.btn-save {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 1rem;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .info-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    min-width: fit-content;
+}
+
+.info-row .info-value {
+    font-weight: 500;
+    color: #6b7280;
+    font-size: 0.9rem;
+    text-align: right;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 60%;
+}
+
+.certificates-list, .progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.cert-item .cert-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.cert-info {
+    flex: 1;
+}
+
+.cert-info .cert-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.cert-meta {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.cert-btn {
+    width: 36px;
+    height: 36px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.progress-item-mobile {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.progress-header-mobile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.progress-course {
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.progress-percent-mobile {
+    font-weight: 700;
+    color: #3b82f6;
+    font-size: 0.9rem;
+}
+
+.progress-bar-mobile {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 50px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+    border-radius: 50px;
+    transition: width 0.3s ease;
+}
+
+.progress-status-mobile {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.progress-status-mobile .status-completed,
+.progress-status-mobile .status-in-progress {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Email Input Improvements */
+.email-input {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    line-height: 1.4;
+    min-height: 50px !important;
+    padding: 0.75rem !important;
+}
+
+.email-input-mobile {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    line-height: 1.3;
+    min-height: 48px !important;
+    padding: 0.75rem !important;
+}
+
+/* Desktop profile header email fix */
+    .profile-email {
+        font-size: 0.95rem !important;
+        word-break: break-all;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        line-height: 1.3;
+        max-width: 100%;
+        overflow-wrap: break-word;
+    }
+
+    /* Mobile profile header email fix */
+    .user-email {
+        font-size: 0.9rem !important;
+        word-break: break-all;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        line-height: 1.4;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        white-space: normal;
+        display: block;
+        margin: 0.25rem 0 0.75rem 0;
+    }
+
+/* Info card email display */
+    .info-value {
+        word-break: break-all;
+        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        font-size: 0.85rem !important;
+        line-height: 1.4;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        white-space: normal;
+        display: block;
+        text-align: right;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+@media (max-width: 768px) {
+    .email-input,
+    .email-input-mobile {
+        font-size: 14px !important;
+        padding: 0.6rem !important;
+    }
+
+    .profile-email {
+        font-size: 0.8rem !important;
+    }
+
+    .user-email {
+        font-size: 0.75rem !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Цифровой дождь
+    const canvas = document.getElementById('digital-rain');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        
+        // Устанавливаем размер canvas
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Параметры дождя
+        const columns = Math.floor(canvas.width / 20);
+        const drops = [];
+        
+        // Инициализация капель
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * canvas.height;
+        }
+        
+        // Символы для отображения
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        
+        function draw() {
+            // Полупрозрачный черный фон для эффекта затухания
+            ctx.fillStyle = 'rgba(30, 58, 138, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Зеленый текст для символов
+            ctx.fillStyle = '#00ff41';
+            ctx.font = '14px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                // Случайный символ
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                
+                // Рисуем символ
+                ctx.fillText(char, i * 20, drops[i]);
+                
+                // Перемещаем каплю вниз
+                drops[i] += 20;
+                
+                // Случайная вероятность сброса капли
+                if (drops[i] > canvas.height && Math.random() > 0.95) {
+                    drops[i] = 0;
+                }
+            }
+        }
+        
+        // Запуск анимации
+        setInterval(draw, 100);
+    }
+    
+    // Анимация появления профиля
+    const profileCard = document.querySelector('.profile-header-card');
+    if (profileCard) {
+        profileCard.style.opacity = '0';
+        profileCard.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            profileCard.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            profileCard.style.opacity = '1';
+            profileCard.style.transform = 'translateY(0)';
+        }, 300);
+    }
+    
+    // Анимация для мобильной версии
+    const mobileHeader = document.querySelector('.mobile-header');
+    if (mobileHeader && window.innerWidth <= 768) {
+        mobileHeader.style.background = 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 30%, #2563eb 70%, #3b82f6 100%)';
+        
+        // Добавляем анимированные элементы для мобильной версии
+        const mobileRain = document.createElement('div');
+        mobileRain.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        `;
+        
+        // Создаем падающие элементы для мобильной версии
+        for (let i = 0; i < 15; i++) {
+            const drop = document.createElement('div');
+            drop.textContent = Math.random() > 0.5 ? '1' : '0';
+            drop.style.cssText = `
+                position: absolute;
+                color: rgba(0, 255, 65, 0.7);
+                font-family: monospace;
+                font-size: 12px;
+                left: ${Math.random() * 100}%;
+                animation: mobileDrop ${3 + Math.random() * 4}s linear infinite;
+                animation-delay: ${Math.random() * 2}s;
+            `;
+            mobileRain.appendChild(drop);
+        }
+        
+        mobileHeader.style.position = 'relative';
+        mobileHeader.appendChild(mobileRain);
+        
+        // CSS анимация для мобильных капель
+        const mobileStyle = document.createElement('style');
+        mobileStyle.textContent = `
+            @keyframes mobileDrop {
+                0% {
+                    transform: translateY(-20px);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(200px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(mobileStyle);
+    }
+});
+</script>
+{% endblock %}

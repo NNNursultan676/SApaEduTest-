@@ -1,0 +1,192 @@
+
+{% extends "base.html" %}
+
+{% block title %}Результат теста - {{ chapter.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header text-center {% if attempt.score >= 100 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h3 class="mb-0">
+                        {% if attempt.score >= 100 %}
+                        <i class="fas fa-check-circle"></i> Тест пройден!
+                        {% else %}
+                        <i class="fas fa-times-circle"></i> Тест не пройден
+                        {% endif %}
+                    </h3>
+                    <p class="mb-0">Ваш результат: {{ "%.1f"|format(attempt.score) }}% </p>
+                </div></old_str>
+
+                <div class="card-body">
+                    <!-- Detailed Results -->
+                    {% if attempt.detailed_results %}
+                    <h4 class="mb-4">Детальные результаты:</h4>
+                    
+                    {% for result in attempt.detailed_results %}
+                    {% set question = chapter.test_questions[result.question_index] %}
+                    <div class="question-result mb-4 p-4 border rounded 
+                         {% if result.is_correct %}border-success bg-light-success{% else %}border-danger bg-light-danger{% endif %}">
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge {% if result.is_correct %}bg-success{% else %}bg-danger{% endif %} me-2">
+                                {{ result.question_index + 1 }}
+                            </span>
+                            <h6 class="mb-0 flex-grow-1">
+                                {% if result.is_correct %}
+                                <i class="fas fa-check text-success me-2"></i>Правильно
+                                {% else %}
+                                <i class="fas fa-times text-danger me-2"></i>Неправильно
+                                {% endif %}
+                            </h6>
+                            {% if question.type == 'multiple' %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-check-square"></i> Множественный выбор
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-dot-circle"></i> Одиночный выбор
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="question-text mb-3">
+                            <strong>Вопрос:</strong> {{ question.text }}
+                            {% if question.image %}
+                            <div class="mt-2">
+                                <img src="{{ question.image }}" class="img-fluid rounded" style="max-width: 400px;">
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="answers-review">
+                            {% for answer in question.answers %}
+                            {% set answer_index = loop.index0 %}
+                            <div class="answer-option mb-2 p-3 rounded
+                                {% if question.type == 'multiple' %}
+                                    {% if result.user_answer and answer_index in result.user_answer %}
+                                        {% if question.correct_answer and answer_index in question.correct_answer %}
+                                            bg-success text-white
+                                        {% else %}
+                                            bg-danger text-white
+                                        {% endif %}
+                                    {% else %}
+                                        bg-light
+                                    {% endif %}
+                                {% else %}
+                                    {% if result.user_answer == answer_index %}
+                                        {% if question.correct_answer == answer_index or (question.correct_answer is iterable and question.correct_answer is not string and answer_index in question.correct_answer) %}
+                                            bg-success text-white
+                                        {% else %}
+                                            bg-danger text-white
+                                        {% endif %}
+                                    {% else %}
+                                        bg-light
+                                    {% endif %}
+                                {% endif %}">
+                                
+                                <div class="d-flex align-items-center">
+                                    {% if question.type == 'multiple' %}
+                                        {% if result.user_answer and answer_index in result.user_answer %}
+                                        <i class="fas fa-check-square me-2"></i>
+                                        {% else %}
+                                        <i class="far fa-square me-2"></i>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if result.user_answer == answer_index %}
+                                        <i class="fas fa-dot-circle me-2"></i>
+                                        {% else %}
+                                        <i class="far fa-circle me-2"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                    
+                                    <span class="flex-grow-1">{{ answer }}</span>
+                                    
+                                    <!-- Status indicators - only show if user selected this answer -->
+                                    {% if question.type == 'multiple' %}
+                                        {% if result.user_answer and answer_index in result.user_answer %}
+                                            {% if question.correct_answer and answer_index in question.correct_answer %}
+                                            <span class="badge bg-success ms-2">Правильно</span>
+                                            {% else %}
+                                            <span class="badge bg-danger ms-2">Неправильно</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if result.user_answer == answer_index %}
+                                            {% if question.correct_answer == answer_index or (question.correct_answer is iterable and question.correct_answer is not string and answer_index in question.correct_answer) %}
+                                            <span class="badge bg-success ms-2">Правильно</span>
+                                            {% else %}
+                                            <span class="badge bg-danger ms-2">Неправильно</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    <!-- Action buttons -->
+                    <div class="text-center mt-4">
+                        {% if attempt.score < 100 %}
+                        <a href="{{ url_for('chapter_test', chapter_id=chapter.id) }}" class="btn btn-warning btn-lg me-2">
+                            <i class="fas fa-redo"></i> Пройти тест повторно
+                        </a>
+                        {% endif %}
+                        
+                        <button onclick="returnToCourse()" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Вернуться к курсу
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-light-success {
+    background-color: #f8fff8 !important;
+}
+
+.bg-light-danger {
+    background-color: #fff8f8 !important;
+}
+
+.question-result {
+    transition: all 0.3s ease;
+}
+
+.answer-option {
+    transition: all 0.2s ease;
+    border: 1px solid #dee2e6;
+}
+
+.answer-option:hover {
+    transform: translateX(2px);
+}
+</style>
+
+<script>
+function returnToCourse() {
+    {% if attempt.score >= 100 %}
+        // Если тест пройден, сохраняем информацию для автоперехода к следующей секции
+        sessionStorage.setItem('test_completed', JSON.stringify({
+            chapterId: {{ chapter.id }},
+            passed: true,
+            score: {{ attempt.score }},
+            autoNavigate: true
+        }));
+        
+        // Переходим к курсу с автопереходом к следующей секции
+        window.location.href = "{{ url_for('view_course', course_id=chapter.course_id) }}";
+    {% else %}
+        // Если тест не пройден, возвращаемся к курсу на текущую главу
+        window.location.href = "{{ url_for('view_course', course_id=chapter.course_id) }}#chapter-{{ chapter.id }}";
+    {% endif %}
+}
+</script>
+{% endblock %}

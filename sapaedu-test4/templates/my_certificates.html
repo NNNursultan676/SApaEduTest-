@@ -1,0 +1,484 @@
+{% extends "base.html" %}
+
+{% block title %}Мои сертификаты - Sapa Edu{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Mobile Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                <div class="mb-3 mb-md-0">
+                    <h2 class="mb-2 mb-md-0">
+                        <i class="fas fa-certificate me-2 text-primary"></i>
+                        Мои сертификаты
+                    </h2>
+                    <p class="text-muted mb-0 d-md-none">Ваши достижения и сертификаты</p>
+                </div>
+                <div class="d-flex gap-2 w-100 w-md-auto">
+                    <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-primary flex-fill flex-md-grow-0">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        <span class="d-none d-md-inline">Назад к дашборду</span>
+                        <span class="d-md-none">Назад</span>
+                    </a>
+                    <a href="{{ url_for('check_certificate') }}" class="btn btn-outline-info flex-fill flex-md-grow-0">
+                        <i class="fas fa-search me-2"></i>
+                        <span class="d-none d-md-inline">Проверить сертификат</span>
+                        <span class="d-md-none">Проверить</span>
+                    </a>
+                </div>
+            </div>
+
+            {% if certificates %}
+                <!-- Statistics -->
+                <div class="row mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="glass-card text-center p-3">
+                            <div class="h4 mb-1 text-primary">{{ certificates|length }}</div>
+                            <small class="text-muted">Всего</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-card text-center p-3">
+                            {% set active_count = certificates|selectattr("status", "equalto", "active")|list|length %}
+                            <div class="h4 mb-1 text-success">{{ active_count }}</div>
+                            <small class="text-muted">Активных</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-card text-center p-3">
+                            {% set revoked_count = certificates|selectattr("status", "equalto", "revoked")|list|length %}
+                            <div class="h4 mb-1 text-danger">{{ revoked_count }}</div>
+                            <small class="text-muted">Отозванных</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="glass-card text-center p-3">
+                            {% set avg_score = (certificates|map(attribute='exam_score')|sum / certificates|length) if certificates else 0 %}
+                            <div class="h4 mb-1 text-info">{{ "%.0f"|format(avg_score) }}%</div>
+                            <small class="text-muted">Средний балл</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificates Grid -->
+                <div class="row">
+                    {% for cert in certificates %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <div class="certificate-card glass-card h-100 {{ 'certificate-active' if cert.status == 'active' else 'certificate-revoked' }}">
+                            <div class="card-body p-4">
+                                <!-- Header -->
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="badge bg-{{ 'success' if cert.status == 'active' else 'danger' }} mb-2">
+                                            {{ 'Активный' if cert.status == 'active' else 'Отозван' }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ cert.issued_at.strftime('%d.%m.%Y') }}
+                                        </div>
+                                    </div>
+                                    <div class="certificate-icon">
+                                        <i class="fas fa-certificate fa-2x text-{{ 'primary' if cert.status == 'active' else 'muted' }}"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Course Title -->
+                                <h5 class="card-title mb-3 course-title">{{ cert.course.title }}</h5>
+
+                                <!-- Certificate Details -->
+                                <div class="certificate-details mb-3">
+                                    <div class="detail-item mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted small">Код сертификата:</span>
+                                            <code class="cert-code">{{ cert.certificate_code }}</code>
+                                        </div>
+                                    </div>
+
+                                    {% if cert.exam_score %}
+                                    <div class="detail-item mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted small">Результат экзамена:</span>
+                                            <span class="score-badge badge bg-info">{{ "%.1f"|format(cert.exam_score) }}%</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                {% if cert.status == 'revoked' and cert.revoked_reason %}
+                                <div class="alert alert-warning alert-sm mb-3">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <small><strong>Причина отзыва:</strong> {{ cert.revoked_reason }}</small>
+                                </div>
+                                {% endif %}
+
+                                <!-- Actions -->
+                                <div class="certificate-actions">
+                                    {% if cert.status == 'active' %}
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ url_for('view_certificate', certificate_id=cert.certificate_id) }}"
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-eye me-2"></i>Просмотреть сертификат
+                                        </a>
+                                        <a href="{{ url_for('download_certificate_image', certificate_id=cert.certificate_id) }}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-download me-2"></i>Скачать PNG
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="shareCertificate('{{ cert.certificate_code }}')">
+                                            <i class="fas fa-share me-2"></i>Поделиться
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center">
+                                        <button class="btn btn-secondary btn-sm w-100" disabled>
+                                            <i class="fas fa-ban me-2"></i>Сертификат отозван
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <div class="glass-card text-center py-5">
+                            <div class="empty-state">
+                                <div class="empty-icon mb-4">
+                                    <i class="fas fa-certificate fa-5x text-muted opacity-50"></i>
+                                </div>
+                                <h4 class="text-muted mb-3">У вас пока нет сертификатов</h4>
+                                <p class="text-muted mb-4">
+                                    Завершите курс и сдайте итоговый экзамен, чтобы получить сертификат о прохождении.
+                                </p>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                    <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary">
+                                        <i class="fas fa-book me-2"></i>Перейти к курсам
+                                    </a>
+                                    <a href="{{ url_for('check_certificate') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-search me-2"></i>Проверить сертификат
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Поделиться сертификатом</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Поделитесь ссылкой для проверки сертификата:</p>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="shareUrl" readonly>
+                    <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-success btn-sm me-2" onclick="shareToWhatsApp()">
+                        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                    </button>
+                    <button class="btn btn-info btn-sm me-2" onclick="shareToTelegram()">
+                        <i class="fab fa-telegram me-1"></i>Telegram
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="shareToEmail()">
+                        <i class="fas fa-envelope me-1"></i>Email
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.certificate-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.certificate-active {
+    border-left: 4px solid #10b981;
+}
+
+.certificate-revoked {
+    border-left: 4px solid #ef4444;
+    opacity: 0.7;
+}
+
+.certificate-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.certificate-icon {
+    opacity: 0.2;
+    color: #9ca3af;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.course-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+}
+
+.cert-code {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.cert-code::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+.score-badge {
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+.alert-sm {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 0.5rem;
+}
+
+.detail-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.empty-state {
+    padding: 2rem 1rem;
+}
+
+.empty-icon {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .certificate-card {
+        margin-bottom: 1rem;
+    }
+
+    .certificate-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .btn {
+        min-height: 44px;
+        font-size: 0.9rem;
+    }
+
+    .btn-sm {
+        min-height: 38px;
+        font-size: 0.85rem;
+    }
+
+    .glass-card {
+        margin-bottom: 1rem;
+    }
+
+    .h4 {
+        font-size: 1.5rem;
+    }
+
+    .course-title {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    .certificate-card {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+    }
+
+    .modal-dialog {
+        margin: 1rem;
+    }
+}
+
+/* Touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    .certificate-card:hover {
+        transform: none;
+    }
+
+    .btn:hover {
+        transform: none;
+    }
+}
+
+/* Clean selection */
+::selection {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #111827 !important;
+}
+
+/* Toast notifications */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    max-width: 300px;
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.toast-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+    .toast-notification {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        transform: translateY(-100%);
+    }
+
+    .toast-notification.show {
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+let currentCertCode = '';
+
+function shareCertificate(certCode) {
+    currentCertCode = certCode;
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}{{ url_for('check_certificate') }}?code=${certCode}`;
+    document.getElementById('shareUrl').value = shareUrl;
+
+    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+    shareModal.show();
+}
+
+function copyToClipboard() {
+    const shareUrl = document.getElementById('shareUrl');
+    shareUrl.select();
+    shareUrl.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(shareUrl.value).then(() => {
+        // Show success feedback
+        const button = event.target.closest('button');
+        const icon = button.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => {
+            icon.className = 'fas fa-copy';
+        }, 2000);
+    });
+}
+
+function shareToWhatsApp() {
+    const text = `Проверьте мой сертификат: ${document.getElementById('shareUrl').value}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function shareToTelegram() {
+    const text = `Проверьте мой сертификат: ${document.getElementById('shareUrl').value}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(document.getElementById('shareUrl').value)}&text=${encodeURIComponent('Проверьте мой сертификат')}`, '_blank');
+}
+
+function shareToEmail() {
+    const subject = 'Мой сертификат от SapaEdu';
+    const body = `Здравствуйте!\n\nПроверьте мой сертификат по ссылке: ${document.getElementById('shareUrl').value}\n\nКод сертификата: ${currentCertCode}`;
+    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+}
+
+// Add loading states for download buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadButtons = document.querySelectorAll('a[href*="download_certificate"]');
+    downloadButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
+            this.classList.add('disabled');
+
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.classList.remove('disabled');
+            }, 3000);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}Сертификат{% endblock %}
+
+{% block content %}
+<div class="certificate-page">
+    <div class="certificate-container" id="certificate">
+        <!-- Decorative border -->
+        <div class="certificate-border"></div>
+
+        <!-- Watermark -->
+        <div class="certificate-watermark">
+            {{ certificate.course.certificate_watermark_text or 'SapaEdu' }}
+        </div>
+
+        <!-- Status Badge -->
+        <div class="certificate-status">
+            {% if certificate.status == 'active' %}
+            <span class="status-badge status-active">
+                <i class="fas fa-check-circle me-2"></i>Действителен
+            </span>
+            {% else %}
+            <span class="status-badge status-revoked">
+                <i class="fas fa-ban me-2"></i>Отозван
+            </span>
+            {% endif %}
+        </div>
+
+        <!-- Header -->
+        <div class="certificate-header">
+            <div class="header-left">
+                {% if certificate.course.certificate_logo_url %}
+                    <img src="{{ certificate.course.certificate_logo_url }}" alt="Logo" class="certificate-logo">
+                {% else %}
+                    <div class="default-logo">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="header-right">
+                <div class="organization-info">
+                    <h4>{{ certificate.course.certificate_organization or "SapaEdu" }}</h4>
+                    <p>Платформа корпоративного обучения</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="certificate-main">
+            <!-- Title Section -->
+            <div class="title-section">
+                <h1 class="certificate-title">{{ certificate.course.certificate_title or "СЕРТИФИКАТ" }}</h1>
+                <div class="title-decoration"></div>
+                <h3 class="certificate-subtitle">{{ certificate.course.certificate_subtitle or "о прохождении курса" }}</h3>
+            </div>
+
+            <!-- Body -->
+            <div class="certificate-body">
+                <p class="awarded-to">выдан</p>
+                <h2 class="recipient-name">{{ certificate.user.name }}</h2>
+
+                <!-- Achievement Badge -->
+                <div class="achievement-badge">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div class="achievement-text">
+                        {{ certificate.course.certificate_achievement_text or 'Успешно завершен курс' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Title -->
+            <div class="course-title">
+                "{{ certificate.course.title }}"
+            </div>
+        </div>
+
+        <!-- Footer Information -->
+        <div class="certificate-footer">
+            <div class="footer-left">
+                <div class="certificate-info">
+                    <div class="info-item">
+                        <strong>Код:</strong>
+                        <span class="certificate-code">{{ certificate.certificate_code }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-right">
+                <div class="qr-section">
+                    <div class="qr-code" id="qr-code-container">
+                        <div class="qr-placeholder" id="qr-with-border">
+                            <div id="qr-inner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons (Hidden during print) -->
+    <div class="certificate-actions no-print">
+        <div class="action-group">
+            <a href="{{ url_for('download_certificate_image', certificate_id=certificate.certificate_id) }}"
+               class="btn btn-success btn-lg">
+                <i class="fas fa-download me-2"></i>Скачать изображение
+            </a>
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>К панели студента
+            </a>
+            <button class="btn btn-info btn-lg" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Печать
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 40px 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#certificate {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+    padding: 80px;
+    border-radius: 25px;
+    box-shadow: 
+        0 30px 90px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative corner elements */
+#certificate::before,
+#certificate::after {
+    content: '';
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border: 8px solid {{ certificate.course.certificate_primary_color or '#667eea' }};
+    opacity: 0.3;
+}
+
+#certificate::before {
+    top: 20px;
+    left: 20px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 25px 0 0 0;
+}
+
+#certificate::after {
+    bottom: 20px;
+    right: 20px;
+    border-left: none;
+    border-top: none;
+    border-radius: 0 0 25px 0;
+}
+
+/* Elegant border */
+.certificate-border {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+    border: 3px solid;
+    border-image: linear-gradient(
+        135deg,
+        {{ certificate.course.certificate_primary_color or '#667eea' }},
+        {{ certificate.course.certificate_accent_color or '#764ba2' }},
+        {{ certificate.course.certificate_primary_color or '#667eea' }}
+    ) 1;
+    border-radius: 15px;
+    pointer-events: none;
+}
+
+.certificate-header {
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+    z-index: 1;
+}
+
+.certificate-badge {
+    width: 140px;
+    height: 140px;
+    background: linear-gradient(135deg, 
+        {{ certificate.course.certificate_primary_color or '#667eea' }}, 
+        {{ certificate.course.certificate_accent_color or '#764ba2' }}
+    );
+    border-radius: 50%;
+    margin: 0 auto 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 
+        0 15px 40px rgba(102, 126, 234, 0.4),
+        0 0 0 8px rgba(255, 255, 255, 0.9),
+        0 0 0 12px {{ certificate.course.certificate_primary_color or '#667eea' }}33;
+    position: relative;
+    animation: badge-glow 3s ease-in-out infinite;
+}
+
+@keyframes badge-glow {
+    0%, 100% {
+        box-shadow: 
+            0 15px 40px rgba(102, 126, 234, 0.4),
+            0 0 0 8px rgba(255, 255, 255, 0.9),
+            0 0 0 12px {{ certificate.course.certificate_primary_color or '#667eea' }}33;
+    }
+    50% {
+        box-shadow: 
+            0 15px 50px rgba(102, 126, 234, 0.6),
+            0 0 0 8px rgba(255, 255, 255, 0.9),
+            0 0 0 12px {{ certificate.course.certificate_primary_color or '#667eea' }}55;
+    }
+}
+
+.certificate-badge i {
+    font-size: 70px;
+    color: white;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.certificate-title {
+    font-size: 56px;
+    font-weight: 900;
+    background: linear-gradient(135deg, 
+        {{ certificate.course.certificate_primary_color or '#667eea' }}, 
+        {{ certificate.course.certificate_accent_color or '#764ba2' }}
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 25px 0;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+    font-family: 'Georgia', serif;
+}
+
+.certificate-subtitle {
+    font-size: 22px;
+    color: {{ certificate.course.certificate_secondary_color or '#6c757d' }};
+    font-style: italic;
+    margin-bottom: 15px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.course-title {
+    font-size: 26px;
+    color: #2d3748;
+    font-weight: 700;
+    margin: 35px 0;
+    padding: 20px 40px;
+    background: linear-gradient(
+        to right, 
+        {{ certificate.course.certificate_primary_color or '#667eea' }}10,
+        {{ certificate.course.certificate_accent_color or '#764ba2' }}10
+    );
+    border-left: 6px solid {{ certificate.course.certificate_accent_color or '#764ba2' }};
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    font-family: 'Georgia', serif;
+    font-style: italic;
+}
+
+.certificate-body {
+    text-align: center;
+    margin: 50px 0;
+    position: relative;
+    z-index: 1;
+}
+
+.awarded-to {
+    font-size: 20px;
+    color: #718096;
+    margin-bottom: 15px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.recipient-name {
+    font-size: 48px;
+    font-weight: 800;
+    color: #1a202c;
+    margin: 25px 0;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 15px;
+    font-family: 'Georgia', serif;
+}
+
+.recipient-name::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 4px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        {{ certificate.course.certificate_accent_color or '#764ba2' }},
+        transparent
+    );
+    border-radius: 2px;
+}
+
+.achievement-badge {
+    margin: 40px 0;
+    padding: 20px;
+    background: linear-gradient(
+        135deg,
+        {{ certificate.course.certificate_accent_color or '#764ba2' }}15,
+        {{ certificate.course.certificate_primary_color or '#667eea' }}15
+    );
+    border-radius: 15px;
+    display: inline-block;
+}
+
+.achievement-badge i {
+    font-size: 40px;
+    color: {{ certificate.course.certificate_accent_color or '#764ba2' }};
+    margin-bottom: 10px;
+}
+
+.achievement-text {
+    font-size: 18px;
+    color: #4a5568;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.certificate-footer {
+    margin-top: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+    border-top: 2px solid {{ certificate.course.certificate_secondary_color or '#e2e8f0' }};
+    padding-top: 30px;
+}
+
+.certificate-info {
+    text-align: left;
+    flex: 1;
+}
+
+.certificate-info p {
+    margin: 8px 0;
+    color: #718096;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.certificate-info strong {
+    color: #2d3748;
+    font-weight: 700;
+}
+
+.certificate-qr {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.qr-container {
+    background: white;
+    padding: 12px;
+    border: 3px solid {{ certificate.course.certificate_secondary_color or '#e2e8f0' }};
+    border-radius: 12px;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+#qr-inner {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto;
+}
+
+.qr-label {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #718096;
+    font-weight: 500;
+}
+
+.certificate-status {
+    position: absolute;
+    top: 50px;
+    right: 50px;
+    z-index: 10;
+}
+
+.status-badge {
+    padding: 12px 28px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.status-active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.status-revoked {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.action-buttons {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.action-buttons .btn {
+    margin: 8px;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Watermark */
+.certificate-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 120px;
+    font-weight: 900;
+    color: {{ certificate.course.certificate_secondary_color or '#e2e8f0' }};
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+    font-family: 'Georgia', serif;
+}
+
+@media print {
+    body {
+        background: white;
+    }
+
+    #certificate {
+        box-shadow: none;
+        border: 2px solid #333;
+        page-break-inside: avoid;
+    }
+
+    .action-buttons {
+        display: none;
+    }
+
+    .certificate-badge {
+        animation: none;
+    }
+}
+
+@media (max-width: 768px) {
+    #certificate {
+        padding: 40px 25px;
+    }
+
+    .certificate-title {
+        font-size: 36px;
+        letter-spacing: 4px;
+    }
+
+    .recipient-name {
+        font-size: 32px;
+    }
+
+    .course-title {
+        font-size: 20px;
+        padding: 15px 20px;
+    }
+
+    .certificate-footer {
+        flex-direction: column;
+        gap: 25px;
+        align-items: center;
+    }
+
+    .certificate-info {
+        text-align: center;
+    }
+
+    .certificate-watermark {
+        font-size: 60px;
+    }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
+
+<script>
+// Enhanced certificate functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add certificate load animation
+    const certificate = document.getElementById('certificate');
+    if (certificate) {
+        certificate.style.opacity = '0';
+        certificate.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            certificate.style.transition = 'all 0.8s ease';
+            certificate.style.opacity = '1';
+            certificate.style.transform = 'translateY(0)';
+        }, 100);
+    }
+
+    // Generate QR code
+    if (typeof generateQRCode === 'function') {
+        generateQRCode('{{ certificate.certificate_code }}');
+    }
+
+    // Add print optimization
+    window.addEventListener('beforeprint', function() {
+        document.body.classList.add('printing');
+    });
+
+    window.addEventListener('afterprint', function() {
+        document.body.classList.remove('printing');
+    });
+});
+
+// QR Code generation
+function generateQRCode(certificateCode) {
+    const qrInnerContainer = document.getElementById('qr-inner');
+    if (!qrInnerContainer) {
+        console.error('QR inner container not found');
+        return;
+    }
+
+    const baseUrl = window.location.origin;
+    const qrUrl = `${baseUrl}/certificates/check?code=${certificateCode}`;
+    console.log('Web QR code URL:', qrUrl);
+
+    qrInnerContainer.innerHTML = '';
+
+    try {
+        if (typeof QRCode !== 'undefined') {
+            const qr = new QRCode(qrInnerContainer, {
+                text: qrUrl,
+                width: 90,
+                height: 90,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            console.log('QR код успешно сгенерирован для кода:', certificateCode);
+        } else {
+            showQRPlaceholder(qrInnerContainer, certificateCode);
+        }
+    } catch (error) {
+        console.error('Ошибка создания QR-кода:', error);
+        showQRPlaceholder(qrInnerContainer, certificateCode);
+    }
+}
+
+function showQRPlaceholder(container, certificateCode) {
+    const baseUrl = window.location.origin;
+    const verifyUrl = `${baseUrl}/certificates/check?code=${certificateCode}`;
+    container.innerHTML = `
+        <div style="
+            width: 100px;
+            height: 100px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            cursor: pointer;
+            position: relative;
+        " onclick="window.open('${verifyUrl}', '_blank')" title="Нажмите для проверки сертификата">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                <div style="position: absolute; top: 5px; left: 5px; width: 6px; height: 6px; background: #6c757d;"></div>
+                <div style="position: absolute; top: 5px; left: 25px; width: 6px; height: 6px; background: #6c757d;"></div>
+                <div style="position: absolute; top: 25px; left: 5px; width: 6px; height: 6px; background: #6c757d;"></div>
+                <div style="position: absolute; top: 25px; left: 25px; width: 6px; height: 6px; background: #6c757d;"></div>
+            </div>
+            <div style="font-size: 1.2rem; margin-bottom: 4px; z-index: 1;">QR</div>
+            <span style="font-size: 0.6rem; text-align: center; line-height: 1.1; z-index: 1;">${certificateCode}</span>
+        </div>
+    `;
+}
+</script>
+{% endblock %}
